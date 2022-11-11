@@ -1,4 +1,4 @@
-# Terraform Kubernetes Example
+# League-of-Legends
 
 This is an example of training a ML model, creating an app using `FastAPI`, and deploy it on a k8s cluster using Minikube specifying all resources with Terraform.
 

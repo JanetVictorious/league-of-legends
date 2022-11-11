@@ -40,3 +40,5 @@ __pycache__
 .ipynb_checkpoints
 logging/**
 !logging/foo.txt
+
+.python-version
