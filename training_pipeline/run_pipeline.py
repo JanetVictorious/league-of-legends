@@ -2,7 +2,7 @@ import os
 import argparse
 import logging
 
-from training_pipeline.pipeline_utils import run_pipeline
+from pipeline import run_pipeline
 
 
 def _parse_args():

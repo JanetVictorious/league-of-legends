@@ -1,19 +1,21 @@
 import os
 import logging
 
+import numpy as np
+
 from sklearn.pipeline import make_pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 from sklearn.compose import make_column_transformer
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, confusion_matrix
 
 import dill
+import json
 
-from training_pipeline.constants import FILENAME, TARGET, TARG_FEAT, MISSING_VAL, NUM_FEAT, CAT_FEAT
-from training_pipeline.utils.data_utils import read_csv
-from training_pipeline.utils.models import ModelName, _services
-from training_pipeline.utils.params import model_params
+from constants import FILENAME, TARGET, TARG_FEAT, MISSING_VAL, NUM_FEAT, CAT_FEAT, DATE_FEATURE_CIDX
+from utils.data_utils import read_csv2, data_split
+from utils.models import ModelName, _services
+from utils.params import model_params
 
 
 def run_pipeline(input_dir: str = ...,
@@ -41,7 +43,7 @@ def run_pipeline(input_dir: str = ...,
     data_path = os.path.abspath(os.path.join(input_dir, FILENAME))
     logging.info(f'Loading data from: {data_path}')
 
-    data, targ_conv = read_csv(data_path)
+    data, _ = read_csv2(data_path)
 
     logging.info(f'Shape of data: {(data.shape)}')
 
@@ -91,12 +93,31 @@ def run_pipeline(input_dir: str = ...,
 
     logging.info('Split data...')
 
-    X = data[:, features]
-    y = [targ_conv.get(i[0]) for i in data[:, TARG_FEAT]]
+    # Split data
+    data_train, data_val, data_test = data_split(data, DATE_FEATURE_CIDX)
+
+    logging.info(f'Shape training set: {data_train.shape}')
+    logging.info(f'Shape validation set: {data_val.shape}')
+    logging.info(f'Shape test set: {data_test.shape}')
+
+    # Train set
+    X_train = data_train[:, features]
+    y_train = np.int32(data_train[:, TARG_FEAT]) - 1
+    y_train = y_train.reshape(-1,)
+
+    # Validation set
+    X_val = data_val[:, features]
+    y_val = np.int32(data_val[:, TARG_FEAT]) - 1
+    y_val = y_val.reshape(-1,)
+
+    # Test set
+    X_test = data_test[:, features]
+    y_test = np.int32(data_test[:, TARG_FEAT]) - 1
+    y_test = y_test.reshape(-1,)
 
     # Split data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=43)
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X, y, test_size=0.33, random_state=43)
 
     logging.info('Train model...')
 
@@ -104,17 +125,25 @@ def run_pipeline(input_dir: str = ...,
     model.fit(X_train, y_train)
 
     logging.info('Results...')
-    y_pred = model.predict(X_test)
+    y_pred_val = model.predict(X_val)
+    y_pred_test = model.predict(X_test)
 
-    f_score = f1_score(y_test, y_pred, average='macro')
-    cm = confusion_matrix(y_test, y_pred)
+    f_score_val = f1_score(y_val, y_pred_val, average='macro')
+    cm_val = confusion_matrix(y_val, y_pred_val)
+    f_score_test = f1_score(y_test, y_pred_test, average='macro')
+    cm_test = confusion_matrix(y_test, y_pred_test)
 
-    logging.info(f'F1 score: {f_score}')
-    logging.info(f'Confusion matrix: \n{cm}')
+    logging.info('Validation set:')
+    logging.info(f'F1 score: {f_score_val}')
+    logging.info(f'Confusion matrix: \n{cm_val}')
+
+    logging.info('Test set:')
+    logging.info(f'F1 score: {f_score_test}')
+    logging.info(f'Confusion matrix: \n{cm_test}')
 
     # Export results
     model_path = os.path.abspath(os.path.join(output_path, f'{model_name}_model.pkl'))
     with open(model_path, 'wb') as file:
-        dill.dump((model, features, TARG_FEAT, targ_conv), file)
+        dill.dump((model, features, TARG_FEAT), file)
 
     logging.info(f'Output saved to: {model_path}')
