@@ -42,3 +42,4 @@ logging/**
 !logging/foo.txt
 
 .python-version
+*_old.*
