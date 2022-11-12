@@ -4,8 +4,7 @@ numpy>=1.23.2
 scikit-learn~=1.1
 xgboost~=1.0
 catboost~=1.0
+tensorflow>=2.0
 dill>=0.3.5
 fastapi~=0.80
 uvicorn[standard]>=0.17.1, <=0.18.3
-jupyterlab~=3.0
-matplotlib~=3.0
