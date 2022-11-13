@@ -1,0 +1,16 @@
+{
+  "firstTower": 1,
+  "firstInhibitor": 2,
+  "firstBaron": 2,
+  "firstDragon": 2,
+  "t1_towerKills": 5,
+  "t1_inhibitorKills": 0,
+  "t1_baronKills": 0,
+  "t1_dragonKills": 0,
+  "t1_riftHeraldKills": 1,
+  "t2_towerKills": 11,
+  "t2_inhibitorKills": 6,
+  "t2_baronKills": 3,
+  "t2_dragonKills": 5,
+  "t2_riftHeraldKills": 0
+}

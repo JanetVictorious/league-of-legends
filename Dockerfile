@@ -6,11 +6,8 @@ WORKDIR $HOME
 
 COPY requirements.txt .
 
-# Dependencies for building the image using Docker daemon on minikube
-ARG BUILD_DEPS="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
-
-RUN pip install --upgrade pip ${BUILD_DEPS} && \
-    pip install -r requirements.txt ${BUILD_DEPS} && \
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
     rm requirements.txt
 
 EXPOSE 80

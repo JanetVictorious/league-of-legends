@@ -199,6 +199,6 @@ def run_pipeline(input_dir: str = ...,
     # Export results
     model_path = os.path.abspath(os.path.join(output_path, f'{model_name}_model.pkl'))
     with open(model_path, 'wb') as file:
-        dill.dump((model, TARG_FEAT), file)
+        dill.dump(model, file)
 
     logging.info(f'Output saved to: {model_path}')
