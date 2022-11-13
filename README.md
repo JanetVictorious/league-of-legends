@@ -4,12 +4,12 @@ This is an example of training a ML model, creating an app using `FastAPI`, and 
 
 ## Training pipeline
 
-All resources related to model training, API, and Docker resides under folder [training_pipeline](./training_pipeline/)
+All resources related to model training, API, and Docker resides under folder [training_pipeline](./training_pipeline/).
 
 
 ## Kubernetes
 
-All resources related to Kubernetes resides under folder [terraform](./terraform/)
+All resources related to Kubernetes resides under folder [terraform](./terraform/).
 
 ## Problem description
 
