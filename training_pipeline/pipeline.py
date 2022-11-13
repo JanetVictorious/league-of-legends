@@ -10,9 +10,8 @@ from sklearn.compose import make_column_transformer
 from sklearn.metrics import f1_score, confusion_matrix
 
 import dill
-import json
 
-from constants import FILENAME, TARGET, TARG_FEAT, MISSING_VAL, NUM_FEAT, CAT_FEAT, DATE_FEATURE_CIDX
+from constants import FILENAME, TARGET, TARG_FEAT, MISSING_VAL, DATE_FEATURE_CIDX, CNAMES, CIDX, MOD_FEAT, LOW_CAR, HIGH_CAR  # noqa: E501
 from utils.data_utils import read_csv2, data_split
 from utils.models import ModelName, _services
 from utils.params import model_params
@@ -56,8 +55,36 @@ def run_pipeline(input_dir: str = ...,
     logging.info(f'Shape of dataframe: {data.shape}')
 
     # Columns for modeling features
-    features = NUM_FEAT + CAT_FEAT
-    logging.info(f'Nr of modeling features: {len(features)}')
+    # features = NUM_FEAT + CAT_FEAT
+    # logging.info(f'Nr of modeling features: {len(features)}')
+
+    # Modeling features column index
+    mod_feat_cidx = [i for i in CIDX if CNAMES[i] in MOD_FEAT]
+
+    # Feature mapping
+    mod_feat_map = np.c_[np.arange(len(MOD_FEAT)), mod_feat_cidx]
+    logging.info(f'Feature mapping between raw and modeling data:\n{mod_feat_map}')
+
+    # Map modeling features to high or low cardinality
+    low_car_cidx = list(set(mod_feat_map[:, 1]).intersection(set([i for i in CIDX if CNAMES[i] in LOW_CAR])))
+    logging.info(f'Low cardinality feature cidx: {low_car_cidx}')
+
+    high_car_cidx = list(set(mod_feat_map[:, 1]).intersection(set([i for i in CIDX if CNAMES[i] in HIGH_CAR])))
+    logging.info(f'High cardinality feature cidx: {high_car_cidx}')
+
+    low_car = [mod_feat_map[mod_feat_map[:, 1] == i, 0][0] for i in low_car_cidx]
+    high_car = [mod_feat_map[mod_feat_map[:, 1] == i, 0][0] for i in high_car_cidx]
+
+    # Sort lists
+    low_car.sort()
+    high_car.sort()
+
+    # Reduce index by 1 since target feature will not be present in modeling set
+    low_car = [i - 1 for i in low_car]
+    high_car = [i - 1 for i in high_car]
+
+    logging.info(f'Low cardinaly column indices in modeling data: {low_car}')
+    logging.info(f'High cardinaly column indices in modeling data: {high_car}')
 
     logging.info('Create preprocessors...')
 
@@ -76,12 +103,19 @@ def run_pipeline(input_dir: str = ...,
     logging.info('Create transformer...')
 
     # Column transformer
-    # NOTE: Here since we're working with the column indices
-    # we need to re-map them to fit the training dataset X
-    preprocessor = make_column_transformer(
-        (num_pp, [i for i in range(len(NUM_FEAT))]),
-        (cat_pp, [i for i in range(len(NUM_FEAT), len(NUM_FEAT + CAT_FEAT))])
-    )
+    if low_car and high_car:
+        preprocessor = make_column_transformer(
+            (num_pp, high_car),
+            (cat_pp, low_car)
+        )
+    elif low_car and not high_car:
+        preprocessor = make_column_transformer(
+            (cat_pp, low_car)
+        )
+    elif high_car and not low_car:
+        preprocessor = make_column_transformer(
+            (num_pp, high_car)
+        )
 
     logging.info('Create model pipeline...')
 
@@ -100,20 +134,41 @@ def run_pipeline(input_dir: str = ...,
     logging.info(f'Shape validation set: {data_val.shape}')
     logging.info(f'Shape test set: {data_test.shape}')
 
+    # Extract modeling columns
     # Train set
-    X_train = data_train[:, features]
-    y_train = np.int32(data_train[:, TARG_FEAT]) - 1
-    y_train = y_train.reshape(-1,)
+    X_train, y_train = data_train[:, mod_feat_cidx[1:]], data_train[:, mod_feat_cidx[0]]
+    logging.info(f'Shape of training features data: {X_train.shape}')
+    logging.info(f'Shape of training label data: {y_train.shape}')
 
     # Validation set
-    X_val = data_val[:, features]
-    y_val = np.int32(data_val[:, TARG_FEAT]) - 1
-    y_val = y_val.reshape(-1,)
+    X_val, y_val = data_val[:, mod_feat_cidx[1:]], data_val[:, mod_feat_cidx[0]]
+    logging.info(f'Shape of validation features data: {X_val.shape}')
+    logging.info(f'Shape of validation label data: {y_val.shape}')
 
     # Test set
-    X_test = data_test[:, features]
-    y_test = np.int32(data_test[:, TARG_FEAT]) - 1
-    y_test = y_test.reshape(-1,)
+    X_test, y_test = data_test[:, mod_feat_cidx[1:]], data_test[:, mod_feat_cidx[0]]
+    logging.info(f'Shape of test features data: {X_test.shape}')
+    logging.info(f'Shape of test label data: {y_test.shape}')
+
+    # Modify target to 0, 1
+    y_train = y_train - 1
+    y_val = y_val - 1
+    y_test = y_test - 1
+
+    # # Train set
+    # X_train = data_train[:, features]
+    # y_train = np.int32(data_train[:, TARG_FEAT]) - 1
+    # y_train = y_train.reshape(-1,)
+
+    # # Validation set
+    # X_val = data_val[:, features]
+    # y_val = np.int32(data_val[:, TARG_FEAT]) - 1
+    # y_val = y_val.reshape(-1,)
+
+    # # Test set
+    # X_test = data_test[:, features]
+    # y_test = np.int32(data_test[:, TARG_FEAT]) - 1
+    # y_test = y_test.reshape(-1,)
 
     # Split data
     # X_train, X_test, y_train, y_test = train_test_split(
@@ -144,6 +199,6 @@ def run_pipeline(input_dir: str = ...,
     # Export results
     model_path = os.path.abspath(os.path.join(output_path, f'{model_name}_model.pkl'))
     with open(model_path, 'wb') as file:
-        dill.dump((model, features, TARG_FEAT), file)
+        dill.dump((model, TARG_FEAT), file)
 
     logging.info(f'Output saved to: {model_path}')

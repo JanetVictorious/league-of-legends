@@ -111,7 +111,7 @@ def data_split(X, date_cidx):
     X_sorted = np.array(X[X[:, date_cidx].argsort()], copy=True)
 
     # Split data into train, validation, and test set
-    X_train, X_val = np.split(X_sorted, [int(0.70 * len(X_sorted))])
+    X_train, X_val = np.split(X_sorted, [int(0.80 * len(X_sorted))])
     X_val, X_test = np.split(X_val, [int(0.5 * len(X_val))])
 
     return X_train, X_val, X_test

@@ -1,4 +1,6 @@
+import os
 import numpy as np
+import json
 
 # # File name
 # FILENAME = 'test.csv'
@@ -13,7 +15,7 @@ import numpy as np
 # CIDX = [i for i in range(len(CNAMES))]
 
 # File nameMISSING_VAL
-FILENAME = 'games.csv'
+FILENAME = 'games_deduped.csv'
 
 # Target column
 TARGET = 'winner'
@@ -32,6 +34,20 @@ NON_MODELING_FEATURES = ['gameId', 'creationTime', 'seasonId']
 
 # Column index for date feature
 DATE_FEATURE_CIDX = 1
+
+# Modeling features
+data_path = os.path.join(os.path.dirname(__file__), 'data/names.json')
+data_path = os.path.abspath(data_path)
+with open(data_path, 'r') as file:
+    MOD_FEAT = json.load(file)
+
+# High and low cardinality features
+data_path = os.path.join(os.path.dirname(__file__), 'data/cardinality_features.json')
+data_path = os.path.abspath(data_path)
+with open(data_path, 'r') as file:
+    d = json.load(file)
+HIGH_CAR = d['high_cardinality']
+LOW_CAR = d['low_cardinality']
 
 # NOTE: Do not modify!
 TARG_FEAT = [i for i in CIDX if CNAMES[i] == TARGET]

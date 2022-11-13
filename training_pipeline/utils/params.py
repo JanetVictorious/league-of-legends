@@ -1,6 +1,6 @@
 model_params = {
     'logistic': {
-        'C': 0.5,
+        'Cs': 10,
     },
     'svc': {
         'C': 0.5,

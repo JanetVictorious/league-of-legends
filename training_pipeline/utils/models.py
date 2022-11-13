@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegressionCV
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 
@@ -21,11 +21,11 @@ class SklearnModelMixin:
 class LogisticModel(SklearnModelMixin):
     def __init__(self, **kwargs):
         super().__init__()
-        self._model = LogisticRegression(multi_class='multinomial',
-                                         max_iter=1000,
-                                         penalty='l2',
-                                         random_state=42,
-                                         **kwargs)
+        self._model = LogisticRegressionCV(multi_class='multinomial',
+                                           max_iter=1000,
+                                           penalty='l2',
+                                           random_state=42,
+                                           **kwargs)
 
 
 class SvcModel(SklearnModelMixin):
