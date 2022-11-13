@@ -2,8 +2,8 @@ apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
-    app: model-serving
-  name: model-serving-hpa
+    app: lol-serving
+  name: lol-serving-hpa
   namespace: ${namespace}
 spec:
   maxReplicas: 3

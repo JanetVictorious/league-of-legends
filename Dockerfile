@@ -14,6 +14,8 @@ EXPOSE 80
 
 COPY ./training_pipeline ./training_pipeline
 
-ENTRYPOINT [ "uvicorn", "training_pipeline.serving.app.main:app" ]
+WORKDIR ./training_pipeline
+
+ENTRYPOINT [ "uvicorn", "app:app" ]
 
 CMD [ "--host", "0.0.0.0", "--port", "80" ]

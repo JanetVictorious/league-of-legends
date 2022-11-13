@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: model-serving-deployment
+  name: lol-serving-deployment
   namespace: ${namespace}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: model-serving
+      app: lol-serving
   template:
     metadata:
       labels:
-        app: model-serving
+        app: lol-serving
     spec:
       containers:
-      - name: model-serving
-        image: model-serving:3.10.6
+      - name: lol-serving
+        image: lol-model:3.10.6
         imagePullPolicy: Never
         ports:
         - containerPort: 80
