@@ -2,7 +2,7 @@
 
 In order to make the model available for online inference.
 
-All terraform resources reside in the [terraform folder](/terraform/). The main orchestration script is [main.tf](/terraform/environment/dev/main.tf) which will specify to use Minikube as configuration and which [Kubernetes modules](/terraform/modules/kubernetes/main.tf) to deploy.
+The main orchestration script is [main.tf](./environment/dev/main.tf) which will specify to use Minikube as configuration and which [Kubernetes modules](./modules/kubernetes/) to deploy.
 
 Some convetion:
 
@@ -10,9 +10,9 @@ Some convetion:
 * `variables.tf` / `terraform.tfvars` describes variables being used
 * `versions.tf` describes provider versions used for resources
 
-### Kubernetes manifests
+## Kubernetes manifests
 
-All `YAML` manifests reside in the [manifest folder](/terraform/modules/kubernetes/manifests/).
+All `YAML` manifests reside in the [manifest folder](./modules/kubernetes/manifests/).
 
 While there are Kubernetes resources on Terraform for deployment, service, etc. the use of traditional `YAML` files is somewhat nice. By utilizing the [kubernetes_manifest](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) or [kubectl_manifest](https://registry.terraform.io/providers/gavinbunney/kubectl/latest/docs/resources/kubectl_manifest) you can easily deploy to a cluster by using already existing `YAML` files. One advantage of this is that you can keep your Terraform code small while still deploying large complex `YAML` files.
 
@@ -72,13 +72,6 @@ Check status of deployment (this will tell you if the deployment is ready):
 kubectl get deploy -n dev-cluster-ns
 ```
 
-You should see something like this:
-
-```bash
-NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-model-serving-deployment   1/1     1            1           4m17s
-```
-
 Check status of service:
 
 ```bash
@@ -87,45 +80,46 @@ kubectl get svc model-serving-service -n dev-cluster-ns
 kubectl get service -n dev-cluster-ns
 ```
 
-You should see something like this:
-
-```bash
-NAME                    TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-model-serving-service   NodePort   10.102.166.117   <none>        80:30001/TCP   5m36s
-```
-
-You can try accessing the deployment now as a sanity check. The following `curl` command will send a row of inference requests to the Nodeport service:
+You can try accessing the deployment as a sanity check. The following `curl` command will send a row of inference requests to the Nodeport service:
 
 ```bash
 curl -X POST $(minikube ip):30001/predict \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "island": "Torgersen",
-  "culmen_length_mm": 39.1,
-  "culmen_depth_mm": 18.7,
-  "flipper_length_mm": 181,
-  "body_mass_g": 3750,
-  "sex": "MALE"
+  "firstTower": 2,
+  "firstInhibitor": 2,
+  "firstBaron": 2,
+  "firstDragon": 1,
+  "t1_towerKills": 0,
+  "t1_inhibitorKills": 0,
+  "t1_baronKills": 0,
+  "t1_dragonKills": 2,
+  "t1_riftHeraldKills": 0,
+  "t2_towerKills": 10,
+  "t2_inhibitorKills": 2,
+  "t2_baronKills": 1,
+  "t2_dragonKills": 1,
+  "t2_riftHeraldKills": 1
 }'
 ```
 
 <details>
 <summary> <i> Troubleshooting: Click here if `curl` command is not working </i> </summary>
 
-Please run this command in a separate window: `minikube service model-serving-service -n dev-cluster-ns`. You will see an output like below:
+Please run this command in a separate window: `minikube service lol-serving-service -n dev-cluster-ns`. You will see an output like below:
 
 ```shell
 |----------------|-----------------------|-----------------------|---------------------------|
 |   NAMESPACE    |         NAME          |      TARGET PORT      |            URL            |
 |----------------|-----------------------|-----------------------|---------------------------|
-| dev-cluster-ns | model-serving-service | model-serving-http/80 | http://192.168.49.2:30001 |
+| dev-cluster-ns | lol-serving-service | lol-serving-http/80 | http://192.168.49.2:30001 |
 |----------------|-----------------------|-----------------------|---------------------------|
-🏃  Starting tunnel for service model-serving-service.
+🏃  Starting tunnel for service lol-serving-service.
 |----------------|-----------------------|-------------|------------------------|
 |   NAMESPACE    |         NAME          | TARGET PORT |          URL           |
 |----------------|-----------------------|-------------|------------------------|
-| dev-cluster-ns | model-serving-service |             | http://127.0.0.1:49688 |
+| dev-cluster-ns | lol-serving-service |             | http://127.0.0.1:49688 |
 |----------------|-----------------------|-------------|------------------------|
 🎉  Opening service dev-cluster-ns/model-serving-service in default browser...
 ❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
@@ -138,12 +132,20 @@ curl -X POST http://127.0.0.1:49688/predict \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "island": "Torgersen",
-  "culmen_length_mm": 39.1,
-  "culmen_depth_mm": 18.7,
-  "flipper_length_mm": 181,
-  "body_mass_g": 3750,
-  "sex": "MALE"
+  "firstTower": 2,
+  "firstInhibitor": 2,
+  "firstBaron": 2,
+  "firstDragon": 1,
+  "t1_towerKills": 0,
+  "t1_inhibitorKills": 0,
+  "t1_baronKills": 0,
+  "t1_dragonKills": 2,
+  "t1_riftHeraldKills": 0,
+  "t2_towerKills": 10,
+  "t2_inhibitorKills": 2,
+  "t2_baronKills": 1,
+  "t2_dragonKills": 1,
+  "t2_riftHeraldKills": 1
 }'
 ```
 
@@ -153,7 +155,7 @@ curl -X POST http://127.0.0.1:49688/predict \
 If the command is successful you should see something like:
 
 ```shell
-{"Prediction":"Adelie"}%
+{"Winning team":2}%
 ```
 
 #### Horisontal Pod Autoscaler
@@ -204,12 +206,20 @@ do curl -X POST http://127.0.0.1:49688/predict \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "island": "Torgersen",
-  "culmen_length_mm": 39.1,
-  "culmen_depth_mm": 18.7,
-  "flipper_length_mm": 181,
-  "body_mass_g": 3750,
-  "sex": "MALE"
+  "firstTower": 2,
+  "firstInhibitor": 2,
+  "firstBaron": 2,
+  "firstDragon": 1,
+  "t1_towerKills": 0,
+  "t1_inhibitorKills": 0,
+  "t1_baronKills": 0,
+  "t1_dragonKills": 2,
+  "t1_riftHeraldKills": 0,
+  "t2_towerKills": 10,
+  "t2_inhibitorKills": 2,
+  "t2_baronKills": 1,
+  "t2_dragonKills": 1,
+  "t2_riftHeraldKills": 1
 }';
 ```
 
@@ -221,7 +231,7 @@ Remember this requires your tunnel to be open.
 You should see the results being printed in quick succession:
 
 ```shell
-{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%{"Prediction":"Adelie"}%
+{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%{"Winning team":2}%
 ```
 
 There are several ways to monitor this but the easiest would be to use Minikube's built-in dashboard. You can launch it by running:

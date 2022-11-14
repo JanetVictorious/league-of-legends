@@ -6,7 +6,7 @@ do curl -X POST $(minikube ip):30001/predict \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-	"firstTower": 2,
+  "firstTower": 2,
   "firstInhibitor": 2,
   "firstBaron": 2,
   "firstDragon": 1,

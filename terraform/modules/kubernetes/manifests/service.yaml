@@ -14,4 +14,4 @@ spec:
     protocol: TCP
     name: lol-serving-http
   selector:
-    app: model-serving
+    app: lol-serving
